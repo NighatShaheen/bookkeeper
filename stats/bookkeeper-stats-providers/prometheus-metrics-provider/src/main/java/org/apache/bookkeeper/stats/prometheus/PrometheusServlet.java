@@ -40,19 +40,30 @@ public class PrometheusServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setStatus(HttpServletResponse.SC_OK);
         resp.setContentType(TextFormat.CONTENT_TYPE_004);
-
-        Writer writer = resp.getWriter();
+    
+        Writer writer = null;
         try {
+            writer = resp.getWriter();
             provider.writeAllMetrics(writer);
             writer.flush();
+        } catch (IOException e) {
+            // Log the exception and set an appropriate error status
+            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            e.printStackTrace(); // Or use a logging framework like SLF4J or Log4j
         } finally {
-            writer.close();
+            if (writer != null) {
+                try {
+                    writer.close();
+                } catch (IOException e) {
+                    // Log the closing exception
+                    e.printStackTrace(); // Or use a logging framework
+                }
+            }
         }
     }
-
+    
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         doGet(req, resp);
     }
-
 }
